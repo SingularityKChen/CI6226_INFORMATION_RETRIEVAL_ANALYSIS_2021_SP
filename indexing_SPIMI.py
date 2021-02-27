@@ -37,3 +37,16 @@ class indexing_SPIMI:
         _sorted_terms = self._sort_terms(f_dictionary=_dictionary)
         self._write_block_to_disk(f_sorted_terms=_sorted_terms, f_dictionary=_dictionary)
         return _sorted_terms, _dictionary
+
+    @staticmethod
+    def merge_two_blocks(_dic_1, _dic_2):
+        """
+
+        :param _dic_1: dictionary to be updated
+        :type _dic_1: dict
+        :param _dic_2: dictionary to update with
+        :type _dic_2:dict
+        :return: the merged dictionary
+        """
+        combined_keys = _dic_1.keys() | _dic_2.keys()
+        return {key: _dic_1.get(key, []) + _dic_2.get(key, []) for key in combined_keys}
