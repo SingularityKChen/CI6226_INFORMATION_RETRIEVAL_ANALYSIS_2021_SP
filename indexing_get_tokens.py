@@ -1,4 +1,5 @@
 import re
+import string
 from pathlib import Path
 from nltk.tokenize import RegexpTokenizer
 from nltk.corpus import stopwords
@@ -10,10 +11,8 @@ class indexing_get_tokens:
         self.sort_dir = Path(f_sort_dir)
         self.block_size = f_block_size
         self.stop_word = set(stopwords.words("english"))
-        # self.tokenizer = RegexpTokenizer(r'\s+', gaps=True)
-        # self.tokenizer = RegexpTokenizer(r'\s+|[@&-]|\:', gaps=True)
-        self.tokenizer = RegexpTokenizer(r'\s+|[\!\@\#\$\%\^\&\*\(\)\-\_\=\+\`\~\"\:\;\/\.\,\?\[\]\{\}\<\>]', gaps=True)
-        self.debug = False
+        self.tokenizer = RegexpTokenizer(r'\s+', gaps=True)
+        self.debug = True
 
     def reading_files(self):
         _blocks_tokens = []
@@ -25,6 +24,8 @@ class indexing_get_tokens:
             # print("[INFO] Doc is", email)
             _terms = self.tokenizer.tokenize(text=email)
             # print("[INFO] Original terms without compression:\n", _terms)
+            _terms = [term for term in _terms if term not in string.punctuation]
+            # print("[INFO] After removing punctuation:\n", _terms)
             _terms = [term.casefold() for term in _terms]
             # print("[INFO] After case folding:\n", _terms)
             _terms = [PorterStemmer().stem(term) for term in _terms]
