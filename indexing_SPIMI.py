@@ -1,5 +1,3 @@
-
-
 class indexing_SPIMI:
     def __init__(self, f_output_dir):
         self.output_dir = f_output_dir
@@ -19,9 +17,9 @@ class indexing_SPIMI:
 
     @staticmethod
     def _sort_terms(f_dictionary):
-        return [f_term for f_term in sorted(f_dictionary)]
+        return [f_term for f_term in sorted(f_dictionary.items())]
 
-    def _write_block_to_disk(self, f_sorted_terms, f_dictionary):
+    def _write_block_to_disk(self, f_dictionary):
         print("[INFO] write terms into", self.output_dir)
 
     def spimi_invert(self, f_token_stream):
@@ -33,10 +31,10 @@ class indexing_SPIMI:
                 _postings_list = self._add_to_dictionary(f_dictionary=_dictionary, f_term=token[0])
             if token[1] not in _postings_list:
                 _postings_list = self._add_to_postings_list(f_postings_list=_postings_list, f_document_id=token[1])
-            # print("[INFO] posting list\n", _postings_list)
-        _sorted_terms = self._sort_terms(f_dictionary=_dictionary)
-        self._write_block_to_disk(f_sorted_terms=_sorted_terms, f_dictionary=_dictionary)
-        return _sorted_terms, _dictionary
+        # sort the dictionary
+        # _dictionary = dict(self._sort_terms(f_dictionary=_dictionary))
+        self._write_block_to_disk(f_dictionary=_dictionary)
+        return _dictionary
 
     @staticmethod
     def merge_two_blocks(_dic_1, _dic_2):
@@ -57,5 +55,4 @@ class indexing_SPIMI:
                 _dic[key] = _dic_2_v + _dic_1_v
             else:
                 _dic[key] = _dic_1_v + _dic_2_v
-        return _dic
-        # return {key: _dic_1.get(key, []) + _dic_2.get(key, []) for key in combined_keys}
+        return dict(sorted(_dic.items()))

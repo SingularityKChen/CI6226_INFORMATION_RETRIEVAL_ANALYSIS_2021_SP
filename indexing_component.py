@@ -20,11 +20,8 @@ class indexing_component:
     # @profile(precision=4, stream=open("./docs/perf/single_block_memory.log", 'w+'))
     def process_one_block(self, f_start_id, f_end_id):
         _tokens = self.get_tokens.reading_files(f_start_id=f_start_id, f_end_id=f_end_id)
-        _sored_terms, _dictionary = self.spimi.spimi_invert(f_token_stream=_tokens)
-        # print("[INFO] sorted terms:\n", _sored_terms)
-        # print("\tdictionary:\n", _dictionary)
-        # print("[INFO] There are %d terms" % len(_dictionary))
-        return _dictionary
+        _sored_terms_dict = self.spimi.spimi_invert(f_token_stream=_tokens)
+        return _sored_terms_dict
 
     # @profile
     # @profile(precision=4, stream=open("./docs/perf/multi_block_memory.log", 'w+'))
@@ -42,7 +39,9 @@ class indexing_component:
             _dic_lists.append(self.process_one_block(f_start_id=_loop_num * self.block_size, f_end_id=self.doc_num - 1))
         while len(_dic_lists) != 1:
             _dic_lists.append(self.spimi.merge_two_blocks(_dic_1=_dic_lists.pop(0), _dic_2=_dic_lists.pop(0)))
-        return _dic_lists[0]
+        # _sorted_dic = dict(sorted(_dic_lists[0].items()))
+        _sorted_dic = _dic_lists[0]
+        return _sorted_dic
 
     def process_multiple_block_and_write_outputs(self):
         _dic = self.process_multiple_block()
