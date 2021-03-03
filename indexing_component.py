@@ -1,8 +1,9 @@
-from indexing_get_tokens import indexing_get_tokens
-from indexing_SPIMI import indexing_SPIMI
+import math
 # from memory_profiler import profile
 from pathlib import Path
-import math
+
+from indexing_SPIMI import indexing_SPIMI
+from indexing_get_tokens import indexing_get_tokens
 
 
 class indexing_component:
@@ -14,7 +15,7 @@ class indexing_component:
         self.get_tokens = indexing_get_tokens(f_sort_dir=f_sort_dir)
         self.spimi = indexing_SPIMI(f_output_dir="")
 
-    @profile
+    # @profile
     # @profile(precision=4, stream=open("./docs/perf/single_block_memory.log", 'w+'))
     def process_one_block(self, f_start_id, f_end_id):
         _tokens = self.get_tokens.reading_files(f_start_id=f_start_id, f_end_id=f_end_id)
@@ -24,7 +25,7 @@ class indexing_component:
         # print("[INFO] There are %d terms" % len(_dictionary))
         return _dictionary
 
-    @profile
+    # @profile
     # @profile(precision=4, stream=open("./docs/perf/multi_block_memory.log", 'w+'))
     def process_multiple_block(self):
         # print("[INFO] There are %d documents" % self.doc_num)
@@ -44,8 +45,24 @@ class indexing_component:
 
 
 if __name__ == '__main__':
+    import cProfile
+    import pstats
+    profiler = cProfile.Profile()
+    _rpt_timing = False
+    _blk_size = 600
     sort_dir = "./docs/HillaryEmails"
-    indexing = indexing_component(f_sort_dir=sort_dir, f_block_size=666)
+    indexing = indexing_component(f_sort_dir=sort_dir, f_block_size=_blk_size)
+    if _rpt_timing:
+        profiler.enable()
     dic = indexing.process_multiple_block()
+    if _rpt_timing:
+        profiler.disable()
+        stats = pstats.Stats(profiler)
+        stats.sort_stats("cumulative")
+        stats.print_stats()
+        stats.print_title()
+        stats.print_callers()
+        stats.print_callees()
+        stats.dump_stats(filename="./docs/perf/timing_blk_%d.stats" % _blk_size)
     # print(dic)
     # print(len(dic))
