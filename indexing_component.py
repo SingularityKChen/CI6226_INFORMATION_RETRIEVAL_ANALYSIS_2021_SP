@@ -64,5 +64,5 @@ if __name__ == '__main__':
         stats.print_callers()
         stats.print_callees()
         stats.dump_stats(filename="./docs/perf/timing_blk_%d.stats" % _blk_size)
-    # print(dic)
+    # print(sorted(dic))
     # print(len(dic))

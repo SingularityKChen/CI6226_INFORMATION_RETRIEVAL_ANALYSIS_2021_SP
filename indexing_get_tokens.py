@@ -10,7 +10,9 @@ class indexing_get_tokens:
     def __init__(self, f_sort_dir):
         self.sort_dir = Path(f_sort_dir)
         self.stop_word = set(stopwords.words("english"))
-        self.tokenizer = RegexpTokenizer(r'\s+', gaps=True)
+        # self.tokenizer = RegexpTokenizer(r'\s+', gaps=True)
+        # self.tokenizer = RegexpTokenizer(r'\s+|[\(\)\"\'\-\,\:\/\*\$\&\=\[\]\<\>\?\@\;\+\^\#\!\_0-9]|\.+', gaps=True)
+        self.tokenizer = RegexpTokenizer(r'[^a-zA-Z]', gaps=True)
         self.debug = True
 
     def reading_files(self, f_start_id, f_end_id):
@@ -22,7 +24,7 @@ class indexing_get_tokens:
             # print("[INFO] Doc is", email)
             _terms = self.tokenizer.tokenize(text=email)
             # print("[INFO] Original terms without compression:\n", _terms)
-            _terms = [term for term in _terms if term not in string.punctuation]
+            # _terms = [term for term in _terms if term not in string.punctuation]
             # print("[INFO] After removing punctuation:\n", _terms)
             _terms = [term.casefold() for term in _terms]
             # print("[INFO] After case folding:\n", _terms)
@@ -30,7 +32,7 @@ class indexing_get_tokens:
             # print("[INFO] After stem:\n", _terms)
             _terms = [term for term in _terms if term not in self.stop_word]
             # print("[INFO] After removing stop words:\n", _terms)
-            _terms = [term for term in _terms if not term.replace(",", "").replace(".", "").isdigit()]
+            # _terms = [term for term in _terms if not term.replace(",", "").replace(".", "").isdigit()]
             # print("[INFO] After removing numbers:\n", _terms)
             _token_doc_id = [(term, doc_id) for term in _terms]
             _tokens.extend(_token_doc_id)
