@@ -7,13 +7,14 @@ from indexing_get_tokens import indexing_get_tokens
 
 
 class indexing_component:
-    def __init__(self, f_sort_dir, f_block_size=666):
+    def __init__(self, f_sort_dir, f_out_dir, f_block_size=666):
         self.sort_dir = f_sort_dir
-        self.debug = False
+        self.out_dir = f_out_dir
+        self.debug = True
         self.doc_num = 100 if self.debug else len(list(Path(self.sort_dir).iterdir()))
         self.block_size = 20 if self.debug else f_block_size
         self.get_tokens = indexing_get_tokens(f_sort_dir=f_sort_dir)
-        self.spimi = indexing_SPIMI(f_output_dir="")
+        self.spimi = indexing_SPIMI(f_output_dir=self.out_dir)
 
     # @profile
     # @profile(precision=4, stream=open("./docs/perf/single_block_memory.log", 'w+'))
@@ -43,18 +44,27 @@ class indexing_component:
             _dic_lists.append(self.spimi.merge_two_blocks(_dic_1=_dic_lists.pop(0), _dic_2=_dic_lists.pop(0)))
         return _dic_lists[0]
 
+    def process_multiple_block_and_write_outputs(self):
+        _dic = self.process_multiple_block()
+        f = open(self.out_dir + "/term_doc.txt", "w")
+        for k, v in _dic.items():
+            f.write(str(k) + ' ' + str(v) + '\n')
+        f.close()
+
 
 if __name__ == '__main__':
     import cProfile
     import pstats
+
     profiler = cProfile.Profile()
     _rpt_timing = False
     _blk_size = 600
     sort_dir = "./docs/HillaryEmails"
-    indexing = indexing_component(f_sort_dir=sort_dir, f_block_size=_blk_size)
+    indexing = indexing_component(f_sort_dir=sort_dir, f_out_dir="./docs/output", f_block_size=_blk_size)
     if _rpt_timing:
         profiler.enable()
-    dic = indexing.process_multiple_block()
+    indexing.process_multiple_block_and_write_outputs()
+    # dic = indexing.process_multiple_block()
     if _rpt_timing:
         profiler.disable()
         stats = pstats.Stats(profiler)
