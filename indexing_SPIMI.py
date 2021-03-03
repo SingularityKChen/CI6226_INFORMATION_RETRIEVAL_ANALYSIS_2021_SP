@@ -49,4 +49,13 @@ class indexing_SPIMI:
         :return: the merged dictionary
         """
         combined_keys = _dic_1.keys() | _dic_2.keys()
-        return {key: _dic_1.get(key, []) + _dic_2.get(key, []) for key in combined_keys}
+        _dic = {}
+        for key in combined_keys:
+            _dic_1_v = _dic_1.get(key, [])
+            _dic_2_v = _dic_2.get(key, [])
+            if _dic_1_v and _dic_2_v and (_dic_1_v[0] > _dic_2_v[0]):
+                _dic[key] = _dic_2_v + _dic_1_v
+            else:
+                _dic[key] = _dic_1_v + _dic_2_v
+        return _dic
+        # return {key: _dic_1.get(key, []) + _dic_2.get(key, []) for key in combined_keys}
