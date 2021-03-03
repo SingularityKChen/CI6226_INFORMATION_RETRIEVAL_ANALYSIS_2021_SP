@@ -17,7 +17,7 @@ class indexing_SPIMI:
 
     @staticmethod
     def _sort_terms(f_dictionary):
-        return [f_term for f_term in sorted(f_dictionary.items())]
+        return dict(sorted(f_dictionary.items()))
 
     def _write_block_to_disk(self, f_dictionary):
         print("[INFO] write terms into", self.output_dir)
@@ -32,12 +32,11 @@ class indexing_SPIMI:
             if token[1] not in _postings_list:
                 _postings_list = self._add_to_postings_list(f_postings_list=_postings_list, f_document_id=token[1])
         # sort the dictionary
-        # _dictionary = dict(self._sort_terms(f_dictionary=_dictionary))
+        # _dictionary = self._sort_terms(f_dictionary=_dictionary)
         self._write_block_to_disk(f_dictionary=_dictionary)
         return _dictionary
 
-    @staticmethod
-    def merge_two_blocks(_dic_1, _dic_2):
+    def merge_two_blocks(self, _dic_1, _dic_2):
         """
 
         :param _dic_1: dictionary to be updated
@@ -55,4 +54,4 @@ class indexing_SPIMI:
                 _dic[key] = _dic_2_v + _dic_1_v
             else:
                 _dic[key] = _dic_1_v + _dic_2_v
-        return dict(sorted(_dic.items()))
+        return self._sort_terms(_dic)
