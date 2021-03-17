@@ -43,7 +43,6 @@ class indexing_SPIMI:
         # sort the dictionary
         _dictionary = self._sort_terms(f_dictionary=_dictionary)
         self._write_block_to_disk(f_dictionary=_dictionary, f_block_id=f_block_id)
-        return _dictionary
 
     def try_merge_blocks(self, f_block_number):
         _tree_depth = ceil(log2(f_block_number))
