@@ -4,6 +4,7 @@ from math import log2, ceil, floor
 class indexing_SPIMI:
     def __init__(self, f_output_dir):
         self.output_dir = f_output_dir
+        self.file_name_format = "block_%d_%d.txt"
 
     @staticmethod
     def _add_to_dictionary(f_dictionary, f_term):
@@ -23,11 +24,12 @@ class indexing_SPIMI:
         return dict(sorted(f_dictionary.items()))
 
     def _write_block_to_disk(self, f_dictionary, f_block_id):
-        f = open(self.output_dir + "block_0_%d.txt" % f_block_id, "w")
+        f = open(self.output_dir + self.file_name_format % (0, f_block_id), "w")
         for k, v in f_dictionary.items():
             f.write(str(k) + ' ' + str(v) + '\n')
         f.close()
-        print("[INFO] write %d-th block into %s" % (f_block_id, self.output_dir + "block_0_%d.txt" % f_block_id))
+        print("[INFO] write %d-th block into %s" %
+              (f_block_id, self.output_dir + self.file_name_format % (0, f_block_id)))
 
     def spimi_invert(self, f_token_stream, f_block_id):
         _dictionary = {}
@@ -53,18 +55,19 @@ class indexing_SPIMI:
             _cur_merge_num = floor(_cur_dep_branch_num / 2)
             _cur_dep_left = _cur_dep_branch_num % 2
             for _merge_idx in range(_cur_merge_num):
-                _blk_2_filename = "block_%d_%d.txt" % (_depth, _merge_idx * 2 + 1)
+                _blk_1_filename = self.file_name_format % (_depth, _merge_idx * 2)
+                _blk_2_filename = self.file_name_format % (_depth, _merge_idx * 2 + 1)
                 if _last_dep_left and (not _cur_dep_left) and _merge_idx == (_cur_merge_num - 1):
                     _blk_2_filename = _left_block_file_list.pop()
-                self.merge_two_blocks_from_files(f_block_filename_1="block_%d_%d.txt" % (_depth, _merge_idx * 2),
+                print("[INFO] Now merging %s with %s" % (_blk_1_filename, _blk_2_filename))
+                self.merge_two_blocks_from_files(f_block_filename_1=_blk_1_filename,
                                                  f_block_filename_2=_blk_2_filename,
-                                                 f_merged_filename="block_%d_%d.txt" % (_depth + 1, _merge_idx))
+                                                 f_merged_filename=self.file_name_format % (_depth + 1, _merge_idx))
             if _cur_dep_left and (not _last_dep_left):
-                _left_block_file_list.append("block_%d_%d.txt" % (_depth, _cur_merge_num))
+                _left_block_file_list.append(self.file_name_format % (_depth, _cur_merge_num * 2))
             # update the variables
             _last_dep_left = _cur_dep_left
             _last_dep_branch_num = _cur_merge_num
-            print(_depth, _left_block_file_list)
 
     def merge_two_blocks_from_files(self, f_block_filename_1, f_block_filename_2, f_merged_filename):
         _block_1 = open(self.output_dir + f_block_filename_1)
@@ -98,6 +101,8 @@ class indexing_SPIMI:
                 _block_2_new = _block_2_new.strip()
                 _term_1, _post_1_str = _block_1_new.split(' [')
                 _term_2, _post_2_str = _block_2_new.split(' [')
+                _post_1_str = _post_1_str.strip(']')
+                _post_2_str = _post_2_str.strip(']')
                 if _term_1 < _term_2:
                     _merged_block.write(_block_1_new + "\n")
                     _block_1_new = _block_1.readline()
@@ -105,10 +110,10 @@ class indexing_SPIMI:
                     _merged_block.write(_block_2_new + "\n")
                     _block_2_new = _block_2.readline()
                 else:
-                    if int(_post_1_str.split(", ")[0].split("]")[0]) < int(_post_2_str.split(", ")[0].split("]")[0]):
-                        _new_post = "[" + _post_1_str.strip("]") + ", " + _post_2_str
+                    if int(_post_1_str.split(", ")[0]) < int(_post_2_str.split(", ")[0]):
+                        _new_post = "[" + _post_1_str + ", " + _post_2_str + "]"
                     else:
-                        _new_post = "[" + _post_2_str.strip("]") + ", " + _post_1_str
+                        _new_post = "[" + _post_2_str + ", " + _post_1_str + "]"
                     _merged_block.write(_term_1 + ' ' + _new_post + '\n')
                     _block_1_new = _block_1.readline()
                     _block_2_new = _block_2.readline()
