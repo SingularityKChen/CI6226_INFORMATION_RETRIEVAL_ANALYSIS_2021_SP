@@ -1,4 +1,3 @@
-import math
 # from memory_profiler import profile
 from pathlib import Path
 import multiprocessing as mp
@@ -34,7 +33,6 @@ class indexing_component:
         # print("[INFO] There are %d documents" % self.doc_num)
         _sub_process_num = min(self.loop_num + self.whether_remains, f_core_num)
         _pool = mp.Pool(_sub_process_num)
-        _merge_layers = math.ceil(math.log2(self.loop_num))
         for _block_idx in range(self.loop_num):
             # print("[INFO] Block Id %d" % _block_idx)
             if self.multi_pro:

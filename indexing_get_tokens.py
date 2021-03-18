@@ -13,13 +13,12 @@ class indexing_get_tokens:
         # self.tokenizer = RegexpTokenizer(r'\s+', gaps=True)
         # self.tokenizer = RegexpTokenizer(r'\s+|[\(\)\"\'\-\,\:\/\*\$\&\=\[\]\<\>\?\@\;\+\^\#\!\_0-9]|\.+', gaps=True)
         self.tokenizer = RegexpTokenizer(r'[^a-zA-Z]', gaps=True)
-        self.debug = True
 
     def reading_files(self, f_start_id, f_end_id):
         _tokens = []
         for doc_id in range(f_start_id + 1, f_end_id + 1):
             file_name = self.sort_dir / ("%d.txt" % doc_id)
-            print("[INFO] current Path %s" % file_name)
+            # print("[INFO] current Path %s" % file_name)
             email = file_name.open().read()
             # print("[INFO] Doc is", email)
             _terms = self.tokenizer.tokenize(text=email)
