@@ -1,9 +1,8 @@
-import re
-import string
 from pathlib import Path
-from nltk.tokenize import RegexpTokenizer
+
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
+from nltk.tokenize import RegexpTokenizer
 
 
 class indexing_get_tokens:
