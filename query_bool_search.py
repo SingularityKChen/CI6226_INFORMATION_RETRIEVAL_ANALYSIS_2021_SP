@@ -4,11 +4,14 @@ from nltk.stem import PorterStemmer
 
 
 class query_bool_search:
-    def __init__(self, f_term_filename):
+    def __init__(self, f_term_filename, f_compression):
+        self.compression = f_compression
+        self.term_str = ""
         self.term_doc_pair = self.read_term_doc(f_term_filename=f_term_filename)
 
+    # @profile
     def do_query(self, f_query):
-        print("[INFO] The query is %s" % f_query)
+        print("[INFO] Your query is \"%s\"" % f_query)
         _operation = self.get_search_operations(f_query=f_query)
         _query_terms = self.get_query_terms(f_query=f_query)
         _posting_sets_list = self.get_posting_lists(f_terms=_query_terms)
@@ -18,9 +21,9 @@ class query_bool_search:
             _query_results = set.union(*map(set, _posting_sets_list))
         else:
             _query_results = set(_posting_sets_list[0]).difference(*map(set, _posting_sets_list[1:]))
-            # _query_results = set.difference(*map(set, _posting_sets_list))
-        print(_query_results)
+        return sorted(_query_results)
 
+    # @profile
     def get_posting_lists(self, f_terms):
         """
 
@@ -29,11 +32,22 @@ class query_bool_search:
         :return:
         """
         _posting_sets_list = []
-        for _term in f_terms:
-            if _term in self.term_doc_pair:
-                _posting_sets_list.append(self.term_doc_pair[_term])
-            else:
-                print("[WARNING] Term \"%s\" is not in the database." % _term)
+        if self.compression:
+            for _term_ptr, _post_list in self.term_doc_pair.items():
+                _term_len_str_len = int(self.term_str[_term_ptr])
+                _term_ptr += 1
+                _term_len = int(self.term_str[_term_ptr:_term_ptr+_term_len_str_len])
+                _term_ptr += _term_len_str_len
+                _term_str = self.term_str[_term_ptr:_term_ptr+_term_len]
+                if _term_str in f_terms:
+                    _posting_sets_list.append(_post_list)
+                    f_terms.remove(_term_str)
+        else:
+            for _term in f_terms:
+                if _term in self.term_doc_pair:
+                    _posting_sets_list.append(self.term_doc_pair[_term])
+                else:
+                    print("[WARNING] Term \"%s\" is not in the database." % _term)
         return _posting_sets_list
 
     @staticmethod
@@ -69,8 +83,8 @@ class query_bool_search:
             print("[INFO] NOT operation")
         return _operation
 
-    @staticmethod
-    def read_term_doc(f_term_filename):
+    # @profile
+    def read_term_doc(self, f_term_filename):
         _term_doc_file = open(f_term_filename, "r")
         _term_doc_dic = OrderedDict()
         for _line in _term_doc_file:
@@ -79,13 +93,21 @@ class query_bool_search:
                 _term, _post_str, _ = split(' \[|]', _line)
                 _post_str = _post_str.split(', ')
                 _post_list = list(map(int, _post_str))
-                _term_doc_dic.update({_term: _post_list})
+                if self.compression:
+                    _cur_term_ptr = len(self.term_str)
+                    _term_len_str = str(len(_term))
+                    self.term_str += str(len(_term_len_str)) + _term_len_str + _term
+                    _term_doc_dic.update({_cur_term_ptr: _post_list})
+                else:
+                    _term_doc_dic.update({_term: _post_list})
         return _term_doc_dic
 
 
 if __name__ == '__main__':
+    whether_compression = True
     query_str = "horse car"
     # query_str = "friend NOT fun NOT adion"
     term_doc_pair_filename = "docs/output/block_5_0.txt"
-    query = query_bool_search(f_term_filename=term_doc_pair_filename)
-    query.do_query(f_query=query_str)
+    query = query_bool_search(f_term_filename=term_doc_pair_filename, f_compression=whether_compression)
+    query_results = query.do_query(f_query=query_str)
+    print(query_results)

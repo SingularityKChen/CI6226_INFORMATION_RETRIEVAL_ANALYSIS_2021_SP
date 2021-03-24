@@ -19,7 +19,7 @@ class indexing_component:
         self.loop_num = int(self.doc_num / self.block_size)
         self.whether_remains = self.doc_num % self.block_size != 0
 
-    @profile
+    # @profile
     # @profile(precision=4, stream=open("./docs/perf/single_block_memory.log", 'w+'))
     def process_one_block(self, f_start_id, f_end_id, f_block_id):
         _tokens = self.get_tokens.reading_files(f_start_id=f_start_id, f_end_id=f_end_id)
@@ -27,7 +27,7 @@ class indexing_component:
         # _sored_terms_dict = self.spimi.spimi_invert(f_token_stream=_tokens, f_block_id=f_block_id)
         # return _sored_terms_dict
 
-    @profile
+    # @profile
     # @profile(precision=4, stream=open("./docs/perf/multi_block_memory.log", 'w+'))
     def process_multiple_block(self, f_core_num):
         # print("[INFO] There are %d documents" % self.doc_num)
@@ -60,7 +60,7 @@ class indexing_component:
             _pool.close()
             _pool.join()
 
-    @profile
+    # @profile
     def merge_blocks(self):
         self.spimi.try_merge_blocks(f_block_number=self.loop_num + self.whether_remains)
 
