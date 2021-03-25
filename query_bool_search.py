@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from re import split, findall
+from sys import getsizeof
 
 from nltk.stem import PorterStemmer
 
@@ -22,6 +23,8 @@ class query_bool_search:
             _query_results = set.union(*map(set, _posting_sets_list))
         else:
             _query_results = set(_posting_sets_list[0]).difference(*map(set, _posting_sets_list[1:]))
+        print("[INFO] Current dictionary size is %d bytes and string size is %d bytes" %
+              (getsizeof(self.term_doc_pair), getsizeof(self.term_str)))
         return sorted(_query_results)
 
     # @profile
@@ -106,7 +109,7 @@ class query_bool_search:
 if __name__ == '__main__':
     whether_compression = True
     query_str = "horse car"
-    # query_str = "friend NOT fun NOT adion"
+    # query_str = "friend NOT fun"
     term_doc_pair_filename = "docs/output/block_5_0.txt"
     query = query_bool_search(f_term_filename=term_doc_pair_filename, f_compression=whether_compression)
     query_results = query.do_query(f_query=query_str)
