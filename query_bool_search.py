@@ -1,5 +1,6 @@
-from re import split
 from collections import OrderedDict
+from re import split, findall
+
 from nltk.stem import PorterStemmer
 
 
@@ -34,10 +35,9 @@ class query_bool_search:
         _posting_sets_list = []
         if self.compression:
             for _term_ptr, _post_list in self.term_doc_pair.items():
-                _term_len_str_len = int(self.term_str[_term_ptr])
-                _term_ptr += 1
-                _term_len = int(self.term_str[_term_ptr:_term_ptr+_term_len_str_len])
-                _term_ptr += _term_len_str_len
+                _term_len_str = findall(r"^\d+", self.term_str[_term_ptr:_term_ptr+3])[0]
+                _term_len = int(_term_len_str)
+                _term_ptr += len(_term_len_str)
                 _term_str = self.term_str[_term_ptr:_term_ptr+_term_len]
                 if _term_str in f_terms:
                     _posting_sets_list.append(_post_list)
@@ -96,7 +96,7 @@ class query_bool_search:
                 if self.compression:
                     _cur_term_ptr = len(self.term_str)
                     _term_len_str = str(len(_term))
-                    self.term_str += str(len(_term_len_str)) + _term_len_str + _term
+                    self.term_str += _term_len_str + _term
                     _term_doc_dic.update({_cur_term_ptr: _post_list})
                 else:
                     _term_doc_dic.update({_term: _post_list})
