@@ -16,17 +16,22 @@ class query_bool_search:
         print("[INFO] Your query is \"%s\"" % f_query)
         _operation = self.get_search_operations(f_query=f_query)
         _query_terms = self.get_query_terms(f_query=f_query)
-        _posting_sets_list = self.get_posting_lists(f_terms=_query_terms)
-        if _operation == 0:
-            print("[INFO] AND operation")
-            _query_results = set.intersection(*map(set, _posting_sets_list))
-        elif _operation == 1:
-            _query_results = set.union(*map(set, _posting_sets_list))
-        else:
-            _query_results = set(_posting_sets_list[0]).difference(*map(set, _posting_sets_list[1:]))
+        _posting_list = self.get_posting_lists(f_terms=_query_terms)
+        _query_results = self.boolean_operation(f_operation=_operation, f_posting_list=_posting_list)
         print("[INFO] Current dictionary size is %d bytes and string size is %d bytes" %
               (getsizeof(self.term_doc_pair), getsizeof(self.term_str)))
         return sorted(_query_results)
+
+    @staticmethod
+    def boolean_operation(f_operation, f_posting_list):
+        if f_operation == 0:
+            print("[INFO] AND operation")
+            _query_results = set.intersection(*map(set, f_posting_list))
+        elif f_operation == 1:
+            _query_results = set.union(*map(set, f_posting_list))
+        else:
+            _query_results = set(f_posting_list[0]).difference(*map(set, f_posting_list[1:]))
+        return _query_results
 
     # @profile
     def get_posting_lists(self, f_terms):
