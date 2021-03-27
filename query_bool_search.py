@@ -3,7 +3,7 @@ from sys import getsizeof
 
 import pandas as pd
 from nltk.stem import PorterStemmer
-from numpy import int32
+from numpy import int32, array
 
 
 class query_bool_search:
@@ -143,7 +143,7 @@ class query_bool_search:
         _term_doc_dic = pd.read_csv(f_term_filename, header=None, sep=' \[|]',
                                     names=["terms", "posting", "empty"], dtype=str, engine='python')
         _term_doc_dic.drop(["empty"], axis=1, inplace=True)
-        _term_doc_dic["posting"] = _term_doc_dic["posting"].apply(lambda x: list(map(int32, x.split(', '))))
+        _term_doc_dic["posting"] = _term_doc_dic["posting"].apply(lambda x: array(map(int32, x.split(', '))))
         if self.compression:
             _term_doc_dic["terms"] = \
                 _term_doc_dic["terms"].apply(lambda x: self.compress_term_prt(str(x))).astype(int32)
@@ -154,6 +154,7 @@ if __name__ == '__main__':
     _whether_jump_prt = True
     for whether_compression in [True, False]:
         query_str = "horse zalem"
+        # query_str = "horse OR rupert"
         # query_str = "horse car zalem"
         # query_str = "friend NOT fun"
         term_doc_pair_filename = "docs/output/block_5_0.txt"
