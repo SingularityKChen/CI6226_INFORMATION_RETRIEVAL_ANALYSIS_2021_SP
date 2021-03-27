@@ -11,6 +11,10 @@ class query_bool_search:
         self.term_str = ""
         self.term_doc_pair = self.read_term_doc(f_term_filename=f_term_filename)
 
+    def print_mem_util(self):
+        print("[INFO] Current dictionary size is \n%s\n and string size is %d bytes" %
+              (self.term_doc_pair.memory_usage(index=False, deep=True), getsizeof(self.term_str)))
+
     # @profile
     def do_query(self, f_query):
         print("[INFO] Your query is \"%s\"" % f_query)
@@ -18,8 +22,6 @@ class query_bool_search:
         _query_terms = self.get_query_terms(f_query=f_query)
         _posting_list = self.get_posting_lists(f_terms=_query_terms)
         _query_results = self.boolean_operation(f_operation=_operation, f_posting_list=_posting_list)
-        print("[INFO] Current dictionary size is %d bytes and string size is %d bytes" %
-              (getsizeof(self.term_doc_pair), getsizeof(self.term_str)))
         return sorted(_query_results)
 
     @staticmethod
@@ -44,6 +46,8 @@ class query_bool_search:
         _posting_sets_list = []
         if self.compression:
             for _idx, _key_row in self.term_doc_pair.iterrows():
+                if not f_terms:
+                    break
                 _term_ptr = _key_row["terms"]
                 _post_list = _key_row["posting"]
                 _term_len_str = findall(r"^\d+", self.term_str[_term_ptr:_term_ptr + 3])[0]
@@ -110,10 +114,16 @@ class query_bool_search:
 
 
 if __name__ == '__main__':
-    whether_compression = True
-    # query_str = "horse car"
-    query_str = "friend NOT fun"
-    term_doc_pair_filename = "docs/output/block_5_0.txt"
-    query = query_bool_search(f_term_filename=term_doc_pair_filename, f_compression=whether_compression)
-    query_results = query.do_query(f_query=query_str)
-    print(query_results)
+    for whether_compression in [True, False]:
+        query_str = "horse car"
+        # query_str = "friend NOT fun"
+        term_doc_pair_filename = "docs/output/block_5_0.txt"
+        query = query_bool_search(f_term_filename=term_doc_pair_filename, f_compression=whether_compression)
+        query_results = query.do_query(f_query=query_str)
+        print("[INFO] Query Results are:")
+        print(query_results)
+        if whether_compression:
+            print("[INFO] Currently, the indexing is compressed.")
+        else:
+            print("[INFO] Currently, no compression for the indexing.")
+        query.print_mem_util()
