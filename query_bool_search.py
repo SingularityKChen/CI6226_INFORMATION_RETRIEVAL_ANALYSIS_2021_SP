@@ -8,6 +8,15 @@ from numpy import int32
 
 class query_bool_search:
     def __init__(self, f_term_filename, f_compression, f_jump_ptr):
+        """
+
+        :param f_term_filename: the file that contains the term-doc pairs
+        :type f_term_filename: str
+        :param f_compression: whether compress the indexing
+        :type f_compression: bool
+        :param f_jump_ptr: ture to jump the pointer when searching the indexing
+        :type f_jump_ptr: bool
+        """
         self.compression = f_compression
         self.jump_ptr = f_jump_ptr
         self.term_str = ""
@@ -53,7 +62,7 @@ class query_bool_search:
     def get_posting_lists(self, f_terms):
         """
 
-        :param f_terms:
+        :param f_terms: the query terms
         :type f_terms: list[str]
         :return:
         """
@@ -61,12 +70,12 @@ class query_bool_search:
         if self.compression:
             if self.jump_ptr:
                 for _query_term_str in f_terms:
+                    print("[INFO] Query term %s:" % _query_term_str)
                     _dic_ptr = 0
                     _ptr_gap = self.half_dic_size
                     _term_str = self.get_term_from_dic_ptr(f_dic_ptr=_dic_ptr)
                     while _term_str != _query_term_str:
-                        print("[INFO] Query term %s, dic_ptr %d, looking term %s" % (
-                            _query_term_str, _dic_ptr, _term_str))
+                        print("\t\t dic_ptr %d, looking term %s" % (_dic_ptr, _term_str))
                         if _term_str < _query_term_str:
                             _dic_ptr += _ptr_gap
                             _ptr_gap = int(_ptr_gap / 2)
@@ -142,7 +151,7 @@ class query_bool_search:
 
 
 if __name__ == '__main__':
-    _whether_jump_prt = False
+    _whether_jump_prt = True
     for whether_compression in [True, False]:
         query_str = "horse zalem"
         # query_str = "horse car zalem"
