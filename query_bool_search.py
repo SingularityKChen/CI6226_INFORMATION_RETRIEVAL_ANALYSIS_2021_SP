@@ -38,8 +38,11 @@ class query_bool_search:
             _query_results = set(f_posting_list[0]).difference(*map(set, f_posting_list[1:]))
         return _query_results
 
-    def get_term_from_ptr(self, f_dic_ptr):
-        f_term_ptr = self.term_doc_pair.loc[f_dic_ptr, "terms"]
+    def get_term_from_dic_ptr(self, f_dic_ptr):
+        _term_ptr = self.term_doc_pair.loc[f_dic_ptr, "terms"]
+        return self.get_term_from_term_ptr(f_term_ptr=_term_ptr)
+
+    def get_term_from_term_ptr(self, f_term_ptr):
         _term_len_str = findall(r"^\d+", self.term_str[f_term_ptr:f_term_ptr + 3])[0]
         _term_len = int32(_term_len_str)
         f_term_ptr += len(_term_len_str)
@@ -60,7 +63,7 @@ class query_bool_search:
                 for _query_term_str in f_terms:
                     _dic_ptr = 0
                     _ptr_gap = self.half_dic_size
-                    _term_str = self.get_term_from_ptr(f_dic_ptr=_dic_ptr)
+                    _term_str = self.get_term_from_dic_ptr(f_dic_ptr=_dic_ptr)
                     while _term_str != _query_term_str:
                         print("[INFO] Query term %s, dic_ptr %d, looking term %s" % (
                             _query_term_str, _dic_ptr, _term_str))
@@ -70,7 +73,7 @@ class query_bool_search:
                         elif _term_str > _query_term_str:
                             _dic_ptr -= _ptr_gap
                             _ptr_gap = int(_ptr_gap / 2)
-                        _term_str = self.get_term_from_ptr(f_dic_ptr=_dic_ptr)
+                        _term_str = self.get_term_from_dic_ptr(f_dic_ptr=_dic_ptr)
                     _posting_sets_list.append(self.term_doc_pair.loc[_dic_ptr, "posting"])
             else:
                 for _idx, _key_row in self.term_doc_pair.iterrows():
@@ -78,10 +81,7 @@ class query_bool_search:
                         break
                     _term_ptr = _key_row["terms"]
                     _post_list = _key_row["posting"]
-                    _term_len_str = findall(r"^\d+", self.term_str[_term_ptr:_term_ptr + 3])[0]
-                    _term_len = int32(_term_len_str)
-                    _term_ptr += len(_term_len_str)
-                    _term_str = self.term_str[_term_ptr:_term_ptr + _term_len]
+                    _term_str = self.get_term_from_term_ptr(f_term_ptr=_term_ptr)
                     if _term_str in f_terms:
                         _posting_sets_list.append(_post_list)
                         f_terms.remove(_term_str)
