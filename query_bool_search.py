@@ -1,15 +1,18 @@
 from re import split, findall
 from sys import getsizeof
+
 import pandas as pd
 from nltk.stem import PorterStemmer
 from numpy import int32
 
 
 class query_bool_search:
-    def __init__(self, f_term_filename, f_compression):
+    def __init__(self, f_term_filename, f_compression, f_jump_ptr):
         self.compression = f_compression
+        self.jump_ptr = f_jump_ptr
         self.term_str = ""
         self.term_doc_pair = self.read_term_doc(f_term_filename=f_term_filename)
+        self.half_dic_size = int(self.term_doc_pair.size / 4)
 
     def print_mem_util(self):
         print("[INFO] Current dictionary size is \n%s\n and string size is %d bytes" %
@@ -35,6 +38,14 @@ class query_bool_search:
             _query_results = set(f_posting_list[0]).difference(*map(set, f_posting_list[1:]))
         return _query_results
 
+    def get_term_from_ptr(self, f_dic_ptr):
+        f_term_ptr = self.term_doc_pair.loc[f_dic_ptr, "terms"]
+        _term_len_str = findall(r"^\d+", self.term_str[f_term_ptr:f_term_ptr + 3])[0]
+        _term_len = int32(_term_len_str)
+        f_term_ptr += len(_term_len_str)
+        _term_str = self.term_str[f_term_ptr:f_term_ptr + _term_len]
+        return _term_str
+
     # @profile
     def get_posting_lists(self, f_terms):
         """
@@ -45,18 +56,35 @@ class query_bool_search:
         """
         _posting_sets_list = []
         if self.compression:
-            for _idx, _key_row in self.term_doc_pair.iterrows():
-                if not f_terms:
-                    break
-                _term_ptr = _key_row["terms"]
-                _post_list = _key_row["posting"]
-                _term_len_str = findall(r"^\d+", self.term_str[_term_ptr:_term_ptr + 3])[0]
-                _term_len = int32(_term_len_str)
-                _term_ptr += len(_term_len_str)
-                _term_str = self.term_str[_term_ptr:_term_ptr + _term_len]
-                if _term_str in f_terms:
-                    _posting_sets_list.append(_post_list)
-                    f_terms.remove(_term_str)
+            if self.jump_ptr:
+                for _query_term_str in f_terms:
+                    _dic_ptr = 0
+                    _ptr_gap = self.half_dic_size
+                    _term_str = self.get_term_from_ptr(f_dic_ptr=_dic_ptr)
+                    while _term_str != _query_term_str:
+                        print("[INFO] Query term %s, dic_ptr %d, looking term %s" % (
+                            _query_term_str, _dic_ptr, _term_str))
+                        if _term_str < _query_term_str:
+                            _dic_ptr += _ptr_gap
+                            _ptr_gap = int(_ptr_gap / 2)
+                        elif _term_str > _query_term_str:
+                            _dic_ptr -= _ptr_gap
+                            _ptr_gap = int(_ptr_gap / 2)
+                        _term_str = self.get_term_from_ptr(f_dic_ptr=_dic_ptr)
+                    _posting_sets_list.append(self.term_doc_pair.loc[_dic_ptr, "posting"])
+            else:
+                for _idx, _key_row in self.term_doc_pair.iterrows():
+                    if not f_terms:
+                        break
+                    _term_ptr = _key_row["terms"]
+                    _post_list = _key_row["posting"]
+                    _term_len_str = findall(r"^\d+", self.term_str[_term_ptr:_term_ptr + 3])[0]
+                    _term_len = int32(_term_len_str)
+                    _term_ptr += len(_term_len_str)
+                    _term_str = self.term_str[_term_ptr:_term_ptr + _term_len]
+                    if _term_str in f_terms:
+                        _posting_sets_list.append(_post_list)
+                        f_terms.remove(_term_str)
         else:
             _posting_sets_list = list(self.term_doc_pair.loc[self.term_doc_pair["terms"].isin(f_terms)]["posting"])
         return _posting_sets_list
@@ -114,11 +142,15 @@ class query_bool_search:
 
 
 if __name__ == '__main__':
+    _whether_jump_prt = False
     for whether_compression in [True, False]:
-        query_str = "horse car"
+        query_str = "horse zalem"
+        # query_str = "horse car zalem"
         # query_str = "friend NOT fun"
         term_doc_pair_filename = "docs/output/block_5_0.txt"
-        query = query_bool_search(f_term_filename=term_doc_pair_filename, f_compression=whether_compression)
+        query = query_bool_search(f_term_filename=term_doc_pair_filename,
+                                  f_compression=whether_compression,
+                                  f_jump_ptr=_whether_jump_prt)
         query_results = query.do_query(f_query=query_str)
         print("[INFO] Query Results are:")
         print(query_results)
