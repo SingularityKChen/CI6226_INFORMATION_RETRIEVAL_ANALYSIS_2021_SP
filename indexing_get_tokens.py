@@ -14,10 +14,15 @@ class indexing_get_tokens:
         """
         self.sort_dir = Path(f_sort_dir)
         self.stop_word = set(stopwords.words("english"))
-        # self.tokenizer = RegexpTokenizer(r'\s+', gaps=True)
-        # self.tokenizer = RegexpTokenizer(r'\s+|[\(\)\"\'\-\,\:\/\*\$\&\=\[\]\<\>\?\@\;\+\^\#\!\_0-9]|\.+', gaps=True)
         self.tokenizer = RegexpTokenizer(r'[^a-zA-Z]', gaps=True)
         self.length_filename = f_length_filename
+
+    def tokenize_text(self, f_text):
+        _terms = self.tokenizer.tokenize(text=f_text)
+        _terms = [term.casefold() for term in _terms]
+        _terms = [PorterStemmer().stem(term) for term in _terms]
+        _terms = [term for term in _terms if term not in self.stop_word]
+        return _terms
 
     def reading_files(self, f_start_id, f_end_id):
         """
@@ -30,21 +35,8 @@ class indexing_get_tokens:
         _doc_len_f = open(self.length_filename, "a")
         for doc_id in range(f_start_id + 1, f_end_id + 1):
             file_name = self.sort_dir / ("%d.txt" % doc_id)
-            # print("[INFO] current Path %s" % file_name)
             email = file_name.open().read()
-            # print("[INFO] Doc is", email)
-            _terms = self.tokenizer.tokenize(text=email)
-            # print("[INFO] Original terms without compression:\n", _terms)
-            # _terms = [term for term in _terms if term not in string.punctuation]
-            # print("[INFO] After removing punctuation:\n", _terms)
-            _terms = [term.casefold() for term in _terms]
-            # print("[INFO] After case folding:\n", _terms)
-            _terms = [PorterStemmer().stem(term) for term in _terms]
-            # print("[INFO] After stem:\n", _terms)
-            _terms = [term for term in _terms if term not in self.stop_word]
-            # print("[INFO] After removing stop words:\n", _terms)
-            # _terms = [term for term in _terms if not term.replace(",", "").replace(".", "").isdigit()]
-            # print("[INFO] After removing numbers:\n", _terms)
+            _terms = self.tokenize_text(f_text=email)
             _token_doc_id = [(term, doc_id) for term in _terms]
             _tokens.extend(_token_doc_id)
             print("%d %d" % (doc_id, len(_terms)), file=_doc_len_f)
