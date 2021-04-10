@@ -1,5 +1,9 @@
+from math import log10
+from re import split
+
+
 class ranking_BM25:
-    def __init__(self, f_k1, f_b, f_n):
+    def __init__(self, f_k1, f_b, f_n, f_length_filename):
         """
 
         :param f_k1:
@@ -9,20 +13,21 @@ class ranking_BM25:
         self.k = f_k1
         self.b = f_b
         self.n = f_n
+        self.doc_len_file = f_length_filename
+        self.l_d = {}
+        self.l_avg = 0
+        self.init_doc_length()
+        self.init_doc_avg_len()
 
-    def df(self):
-        """
-        Compute the document frequency of the document
-        :return:
-        """
-        pass
-
-    def idf(self):
+    def idf(self, f_posting_list):
         """
         Compute the idf of term in the document d
         :return:
         """
-        pass
+        if f_posting_list:
+            return log10(self.n / len(f_posting_list))
+        else:
+            return 0
 
     def tf_td(self):
         """
@@ -31,18 +36,23 @@ class ranking_BM25:
         """
         pass
 
-    def l_d(self):
+    def init_doc_length(self):
         """
         Compute the length of doc d
         :return: the length of doc d
         """
-        pass
+        _doc_len_f = open(self.doc_len_file)
+        for _line in _doc_len_f.readlines():
+            _line = _line.strip()
+            _doc_id, _doc_len = split(" ", _line)
+            self.l_d[int(_doc_id)] = int(_doc_len)
 
-    def l_avg(self):
+    def init_doc_avg_len(self):
         """
         Compute the average doc length in collection
         :return: the average doc length in collection
         """
+        self.l_avg = sum(self.l_d.values()) / self.n
 
     def get_score(self):
         """
@@ -50,3 +60,13 @@ class ranking_BM25:
         :return:
         """
         pass
+
+
+if __name__ == '__main__':
+    from pathlib import Path
+    sort_dir = "./docs/HillaryEmails"
+    doc_length_filename = "./docs/output/document_length.txt"
+    k1 = 0.5
+    b = 0.5
+    n = len(list(Path(sort_dir).iterdir()))
+    bm25 = ranking_BM25(f_k1=k1, f_b=b, f_n=n, f_length_filename=doc_length_filename)

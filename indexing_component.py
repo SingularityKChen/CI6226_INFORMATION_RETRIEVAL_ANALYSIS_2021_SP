@@ -7,13 +7,13 @@ from indexing_get_tokens import indexing_get_tokens
 
 
 class indexing_component:
-    def __init__(self, f_sort_dir, f_out_dir, f_block_size=666, f_whether_multi_pro=False):
+    def __init__(self, f_sort_dir, f_out_dir, f_length_filename, f_block_size=666, f_whether_multi_pro=False):
         self.sort_dir = f_sort_dir
         self.out_dir = f_out_dir
         self.debug = False
         self.doc_num = 100 if self.debug else len(list(Path(self.sort_dir).iterdir()))
         self.block_size = 20 if self.debug else f_block_size
-        self.get_tokens = indexing_get_tokens(f_sort_dir=f_sort_dir)
+        self.get_tokens = indexing_get_tokens(f_sort_dir=f_sort_dir, f_length_filename=f_length_filename)
         self.spimi = indexing_SPIMI(f_output_dir=self.out_dir)
         self.multi_pro = f_whether_multi_pro
         self.loop_num = int(self.doc_num / self.block_size)
@@ -79,7 +79,10 @@ if __name__ == '__main__':
     _whether_multi_processor = False
     _core_num = mp.cpu_count() if _whether_multi_processor else 1
     sort_dir = "./docs/HillaryEmails"
+    doc_length_filename = "./docs/output/document_length.txt"
+    Path(doc_length_filename).unlink(missing_ok=True)
     indexing = indexing_component(f_sort_dir=sort_dir, f_out_dir="./docs/output/",
+                                  f_length_filename=doc_length_filename,
                                   f_block_size=_blk_size, f_whether_multi_pro=_whether_multi_processor)
     if _rpt_timing:
         profiler.enable()
