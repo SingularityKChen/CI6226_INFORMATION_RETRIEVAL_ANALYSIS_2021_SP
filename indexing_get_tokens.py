@@ -1,28 +1,18 @@
 from pathlib import Path
 
-from nltk.corpus import stopwords
-from nltk.stem import PorterStemmer
-from nltk.tokenize import RegexpTokenizer
+from utils import tokenize
 
 
-class indexing_get_tokens:
+class indexing_get_tokens(tokenize):
     def __init__(self, f_sort_dir, f_length_filename):
         """
 
         :param f_sort_dir: the directory to read the files
         :param f_length_filename: the name of the document length file that will generated
         """
+        super(indexing_get_tokens, self).__init__()
         self.sort_dir = Path(f_sort_dir)
-        self.stop_word = set(stopwords.words("english"))
-        self.tokenizer = RegexpTokenizer(r'[^a-zA-Z]', gaps=True)
         self.length_filename = f_length_filename
-
-    def tokenize_text(self, f_text):
-        _terms = self.tokenizer.tokenize(text=f_text)
-        _terms = [term.casefold() for term in _terms]
-        _terms = [PorterStemmer().stem(term) for term in _terms]
-        _terms = [term for term in _terms if term not in self.stop_word]
-        return _terms
 
     def reading_files(self, f_start_id, f_end_id):
         """
