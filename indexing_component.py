@@ -50,11 +50,11 @@ class indexing_component:
             if self.multi_pro:
                 _pool.apply_async(func=self.process_one_block,
                                   args=(self.loop_num * self.block_size,
-                                        self.doc_num - 1, self.loop_num,)
+                                        self.doc_num, self.loop_num,)
                                   )
             else:
                 self.process_one_block(f_start_id=self.loop_num * self.block_size,
-                                       f_end_id=self.doc_num - 1,
+                                       f_end_id=self.doc_num,
                                        f_block_id=self.loop_num)
         if self.multi_pro:
             _pool.close()
