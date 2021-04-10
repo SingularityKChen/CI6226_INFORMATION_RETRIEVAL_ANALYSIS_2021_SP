@@ -24,13 +24,13 @@ class ranking_BM25(tokenize):
         self.init_doc_length()
         self.init_doc_avg_len()
 
-    def compute_idf(self, f_posting_list):
+    def compute_idf(self, f_term_freq):
         """
         Compute the idf of term in the document d
         :return:
         """
-        if f_posting_list:
-            return log10(self.n / len(f_posting_list))
+        if f_term_freq:
+            return log10(self.n / f_term_freq)
         else:
             return 0
 
@@ -42,7 +42,6 @@ class ranking_BM25(tokenize):
         _doc = Path(self.index_dir) / ("%d.txt" % f_doc_id)
         _doc = _doc.open().read()
         _terms = self.tokenize_text(f_text=_doc)
-        print(_terms)
         return _terms.count(f_term)
 
     def init_doc_length(self):
@@ -63,12 +62,24 @@ class ranking_BM25(tokenize):
         """
         self.l_avg = sum(self.l_d.values()) / self.n
 
-    def get_score(self):
+    def get_score(self, f_terms, f_term_freq_list, f_posting_list):
         """
         Compute the BM25 score
+        :type f_term_freq_list: list[int]
+        :type f_terms: list
+        :type f_posting_list: list[int]
         :return:
         """
-        pass
+        _doc_score = {}
+        for _doc_id in f_posting_list:
+            _score = 0
+            for _term_idx, _term in enumerate(f_terms):
+                _tf_df = self.compute_tf_td(f_term=_term, f_doc_id=_doc_id)
+                _numerator = (self.k + 1) * _tf_df
+                _denominator = self.k * (1 - self.b + self.b * self.l_d[_doc_id] / self.l_avg) + _tf_df
+                _score += self.compute_idf(f_term_freq_list[_term_idx]) * _numerator / _denominator
+            _doc_score[_doc_id] = _score
+        return _doc_score
 
 
 if __name__ == '__main__':

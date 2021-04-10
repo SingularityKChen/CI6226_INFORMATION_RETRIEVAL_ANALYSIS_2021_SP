@@ -4,10 +4,11 @@ from sys import getsizeof
 import pandas as pd
 from nltk.stem import PorterStemmer
 from numpy import int32, array
+from ranking_BM25 import ranking_BM25
 
 
 class query_bool_search:
-    def __init__(self, f_term_filename, f_compression, f_jump_ptr):
+    def __init__(self, f_term_filename, f_compression, f_jump_ptr, f_n, f_index_dir, f_length_filename):
         """
 
         :param f_term_filename: the file that contains the term-doc pairs
@@ -22,6 +23,8 @@ class query_bool_search:
         self.term_str = ""
         self.term_doc_pair = self.read_term_doc(f_term_filename=f_term_filename)
         self.half_dic_size = int(self.term_doc_pair.size / 4)
+        self.bm25 = ranking_BM25(f_k1=0.5, f_b=0.5, f_n=f_n,
+                                 f_index_dir=f_index_dir, f_length_filename=f_length_filename)
 
     def print_mem_util(self):
         print("[INFO] Current dictionary size is \n%s\n and string size is %d bytes" %
@@ -34,6 +37,8 @@ class query_bool_search:
         _query_terms = self.get_query_terms(f_query=f_query)
         _posting_list = self.get_posting_lists(f_terms=_query_terms)
         _query_results = self.boolean_operation(f_operation=_operation, f_posting_list=_posting_list)
+        _ranking_scores = self.ranking(f_terms=_query_terms, f_postings=_posting_list, f_results=_query_results)
+        print(_ranking_scores)
         return sorted(_query_results)
 
     @staticmethod
@@ -149,18 +154,26 @@ class query_bool_search:
                 _term_doc_dic["terms"].apply(lambda x: self.compress_term_prt(str(x))).astype(int32)
         return _term_doc_dic
 
+    def ranking(self, f_terms, f_postings, f_results):
+        _term_freq_list = [len(set(x)) for x in f_postings]
+        print(_term_freq_list, set(f_postings[0]))
+        return self.bm25.get_score(f_terms=f_terms, f_posting_list=f_results, f_term_freq_list=_term_freq_list)
+
 
 if __name__ == '__main__':
     _whether_jump_prt = True
+    doc_length_filename = "./docs/output/document_length.txt"
+    term_doc_pair_filename = "docs/output/block_4_0.txt"
+    sort_dir = "./docs/HillaryEmails"
     for whether_compression in [True, False]:
         query_str = "horse zalem"
         # query_str = "horse OR rupert"
         # query_str = "horse car zalem"
         # query_str = "friend NOT fun"
-        term_doc_pair_filename = "docs/output/block_5_0.txt"
         query = query_bool_search(f_term_filename=term_doc_pair_filename,
                                   f_compression=whether_compression,
-                                  f_jump_ptr=_whether_jump_prt)
+                                  f_jump_ptr=_whether_jump_prt,
+                                  f_n=7945, f_index_dir=sort_dir, f_length_filename=doc_length_filename)
         query_results = query.do_query(f_query=query_str)
         print("[INFO] Query Results are:")
         print(query_results)
