@@ -38,12 +38,12 @@ class indexing_component:
             if self.multi_pro:
                 _pool.apply_async(func=self.process_one_block,
                                   args=(_block_idx * self.block_size,
-                                        (_block_idx + 1) * self.block_size - 1,
+                                        (_block_idx + 1) * self.block_size,
                                         _block_idx,)
                                   )
             else:
                 self.process_one_block(f_start_id=_block_idx * self.block_size,
-                                       f_end_id=(_block_idx + 1) * self.block_size - 1,
+                                       f_end_id=(_block_idx + 1) * self.block_size,
                                        f_block_id=_block_idx)
         if self.whether_remains:
             # print("[INFO] processing remaining documents.")
