@@ -23,7 +23,7 @@ class query_bool_search:
         self.term_str = ""
         self.term_doc_pair = self.read_term_doc(f_term_filename=f_term_filename)
         self.half_dic_size = int(self.term_doc_pair.size / 4)
-        self.bm25 = ranking_BM25(f_k1=0.5, f_b=0.5, f_n=f_n,
+        self.bm25 = ranking_BM25(f_k1=1.2, f_b=0.75, f_n=f_n,
                                  f_index_dir=f_index_dir, f_length_filename=f_length_filename)
 
     def print_mem_util(self):
@@ -31,15 +31,18 @@ class query_bool_search:
               (self.term_doc_pair.memory_usage(index=False, deep=True), getsizeof(self.term_str)))
 
     # @profile
-    def do_query(self, f_query):
+    def do_query(self, f_query, f_whether_rank):
         print("[INFO] Your query is \"%s\"" % f_query)
         _operation = self.get_search_operations(f_query=f_query)
         _query_terms = self.get_query_terms(f_query=f_query)
         _posting_list = self.get_posting_lists(f_terms=_query_terms)
         _query_results = self.boolean_operation(f_operation=_operation, f_posting_list=_posting_list)
-        _ranking_scores = self.ranking(f_terms=_query_terms, f_postings=_posting_list, f_results=_query_results)
-        print(_ranking_scores)
-        return sorted(_query_results)
+        if f_whether_rank:
+            _ranking_scores = self.ranking(f_terms=_query_terms, f_postings=_posting_list, f_results=_query_results)
+            print("[INFO] The doc id with scores", _ranking_scores)
+            return list(map(lambda x: x[0], sorted(_ranking_scores.items(), key=lambda kv: kv[1], reverse=True)))
+        else:
+            return sorted(_query_results)
 
     @staticmethod
     def boolean_operation(f_operation, f_posting_list):
@@ -101,7 +104,7 @@ class query_bool_search:
                         f_terms.remove(_term_str)
         else:
             _posting_sets_list = list(self.term_doc_pair.loc[self.term_doc_pair["terms"].isin(f_terms)]["posting"])
-        return _posting_sets_list
+        return list(map(list, _posting_sets_list))
 
     @staticmethod
     def get_query_terms(f_query):
@@ -155,8 +158,7 @@ class query_bool_search:
         return _term_doc_dic
 
     def ranking(self, f_terms, f_postings, f_results):
-        _term_freq_list = [len(set(x)) for x in f_postings]
-        print(_term_freq_list, set(f_postings[0]))
+        _term_freq_list = [len(x) for x in f_postings]
         return self.bm25.get_score(f_terms=f_terms, f_posting_list=f_results, f_term_freq_list=_term_freq_list)
 
 
@@ -174,7 +176,7 @@ if __name__ == '__main__':
                                   f_compression=whether_compression,
                                   f_jump_ptr=_whether_jump_prt,
                                   f_n=7945, f_index_dir=sort_dir, f_length_filename=doc_length_filename)
-        query_results = query.do_query(f_query=query_str)
+        query_results = query.do_query(f_query=query_str, f_whether_rank=True)
         print("[INFO] Query Results are:")
         print(query_results)
         if whether_compression:

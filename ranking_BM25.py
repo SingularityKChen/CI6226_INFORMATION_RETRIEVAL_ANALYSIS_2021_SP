@@ -26,8 +26,10 @@ class ranking_BM25(tokenize):
 
     def compute_idf(self, f_term_freq):
         """
-        Compute the idf of term in the document d
-        :return:
+        Compute the idf of this term in the documents
+
+        :param f_term_freq: the number of documents that contains this term
+        :return: the IDF (inverse document frequency) weight of this query term
         """
         if f_term_freq:
             return log10(self.n / f_term_freq)
@@ -85,7 +87,7 @@ class ranking_BM25(tokenize):
 if __name__ == '__main__':
     sort_dir = "./docs/HillaryEmails"
     doc_length_filename = "./docs/output/document_length.txt"
-    k1 = 0.5
-    b = 0.5
+    k1 = 1.2
+    b = 0.75
     n = len(list(Path(sort_dir).iterdir()))
     bm25 = ranking_BM25(f_k1=k1, f_b=b, f_n=n, f_index_dir=sort_dir, f_length_filename=doc_length_filename)
