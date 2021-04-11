@@ -168,19 +168,20 @@ if __name__ == '__main__':
     term_doc_pair_filename = "docs/output/block_4_0.txt"
     sort_dir = "./docs/HillaryEmails"
     for whether_compression in [True, False]:
-        query_str = "horse zalem"
-        # query_str = "horse OR rupert"
-        # query_str = "horse car zalem"
-        # query_str = "friend NOT fun"
-        query = query_bool_search(f_term_filename=term_doc_pair_filename,
-                                  f_compression=whether_compression,
-                                  f_jump_ptr=_whether_jump_prt,
-                                  f_n=7945, f_index_dir=sort_dir, f_length_filename=doc_length_filename)
-        query_results = query.do_query(f_query=query_str, f_whether_rank=True)
-        print("[INFO] Query Results are:")
-        print(query_results)
-        if whether_compression:
-            print("[INFO] Currently, the indexing is compressed.")
-        else:
-            print("[INFO] Currently, no compression for the indexing.")
-        query.print_mem_util()
+        for whether_rank in [True, False]:
+            query_str = "horse zalem"
+            # query_str = "horse OR rupert"
+            # query_str = "horse car zalem"
+            # query_str = "friend NOT fun"
+            query = query_bool_search(f_term_filename=term_doc_pair_filename,
+                                      f_compression=whether_compression,
+                                      f_jump_ptr=_whether_jump_prt,
+                                      f_n=7945, f_index_dir=sort_dir, f_length_filename=doc_length_filename)
+            query_results = query.do_query(f_query=query_str, f_whether_rank=whether_rank)
+            print("[INFO] Query %s Results are:" % ("ranked" if whether_rank else "unranked"))
+            print(query_results)
+            if whether_compression:
+                print("[INFO] Currently, the indexing is compressed.")
+            else:
+                print("[INFO] Currently, no compression for the indexing.")
+            query.print_mem_util()
