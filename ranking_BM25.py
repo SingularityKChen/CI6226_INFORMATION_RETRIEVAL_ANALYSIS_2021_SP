@@ -2,6 +2,7 @@ from math import log10
 from re import split
 from pathlib import Path
 from utils import tokenize
+from multiprocessing import Pool, cpu_count
 
 
 class ranking_BM25(tokenize):
@@ -36,15 +37,15 @@ class ranking_BM25(tokenize):
         else:
             return 0
 
-    def compute_tf_td(self, f_term, f_doc_id):
+    @staticmethod
+    def compute_tf_td(f_term, f_terms_in_doc):
         """
-        Compute term frequency in document d
+        Compute this term frequency in document d
+        :type f_term: str
+        :type f_terms_in_doc: list[str]
         :return: term frequency in document d
         """
-        _doc = Path(self.index_dir) / ("%d.txt" % f_doc_id)
-        _doc = _doc.open().read()
-        _terms = self.tokenize_text(f_text=_doc)
-        return _terms.count(f_term)
+        return f_terms_in_doc.count(f_term)
 
     def init_doc_length(self):
         """
@@ -64,6 +65,11 @@ class ranking_BM25(tokenize):
         """
         self.l_avg = sum(self.l_d.values()) / self.n
 
+    def get_terms_in_the_doc(self, f_doc_id):
+        _doc = Path(self.index_dir) / ("%d.txt" % f_doc_id)
+        _doc = _doc.open().read()
+        return self.tokenize_text(f_text=_doc)
+
     def get_score(self, f_terms, f_term_freq_list, f_posting_list):
         """
         Compute the BM25 score
@@ -73,10 +79,12 @@ class ranking_BM25(tokenize):
         :return:
         """
         _doc_score = {}
-        for _doc_id in f_posting_list:
+        _pool = Pool(cpu_count())
+        _terms_in_docs = _pool.map(self.get_terms_in_the_doc, f_posting_list)
+        for _doc_idx, _doc_id in enumerate(f_posting_list):
             _score = 0
             for _term_idx, _term in enumerate(f_terms):
-                _tf_df = self.compute_tf_td(f_term=_term, f_doc_id=_doc_id)
+                _tf_df = self.compute_tf_td(f_term=_term, f_terms_in_doc=_terms_in_docs[_doc_idx])
                 _numerator = (self.k + 1) * _tf_df
                 _denominator = self.k * (1 - self.b + self.b * self.l_d[_doc_id] / self.l_avg) + _tf_df
                 _score += self.compute_idf(f_term_freq_list[_term_idx]) * _numerator / _denominator
