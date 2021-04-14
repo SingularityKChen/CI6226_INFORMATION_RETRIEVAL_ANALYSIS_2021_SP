@@ -78,12 +78,12 @@ class query_bool_search:
         if self.compression:
             if self.jump_ptr:
                 for _query_term_str in f_terms:
-                    print("[INFO] Query term %s:" % _query_term_str)
+                    # print("[INFO] Query term %s:" % _query_term_str)
                     _dic_ptr = 0
                     _ptr_gap = self.half_dic_size
                     _term_str = self.get_term_from_dic_ptr(f_dic_ptr=_dic_ptr)
                     while _term_str != _query_term_str:
-                        print("\t\t dic_ptr %d, looking term %s" % (_dic_ptr, _term_str))
+                        # print("\t\t dic_ptr %d, looking term %s" % (_dic_ptr, _term_str))
                         if _term_str < _query_term_str:
                             _dic_ptr += _ptr_gap
                             _ptr_gap = int(_ptr_gap / 2)
@@ -169,7 +169,7 @@ if __name__ == '__main__':
     sort_dir = "./docs/HillaryEmails"
     for whether_compression in [True, False]:
         for whether_rank in [True, False]:
-            query_str = "horse zalem"
+            query_str = "Islamophobia President Obama"
             # query_str = "horse OR rupert"
             # query_str = "horse car zalem"
             # query_str = "friend NOT fun"

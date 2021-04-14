@@ -82,6 +82,7 @@ class ranking_BM25(tokenize):
         _pool = Pool(cpu_count())
         _terms_in_docs = _pool.map(self.get_terms_in_the_doc, f_posting_list)
         for _doc_idx, _doc_id in enumerate(f_posting_list):
+            print("[INFO] Doc Id %d length %d" % (_doc_id, self.l_d[_doc_id]))
             _score = 0
             for _term_idx, _term in enumerate(f_terms):
                 _tf_df = self.compute_tf_td(f_term=_term, f_terms_in_doc=_terms_in_docs[_doc_idx])
